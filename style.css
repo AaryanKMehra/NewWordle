@@ -1,0 +1,113 @@
+:root {
+    --bg: #ffffff;
+    --text: #000000;
+    --border: #d3d6da;
+    --correct: #000000;
+    --present: #787c7e;
+    --absent: #3a3a3c;
+    --white: #ffffff;
+}
+
+body {
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+#game-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 400px;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+h1 {
+    font-size: 2.5rem;
+    letter-spacing: 2px;
+    margin: 0;
+}
+
+.score-container {
+    font-weight: bold;
+    margin-top: 5px;
+}
+
+#board {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr); /* This fixes the vertical stacking */
+    gap: 8px;
+    margin-bottom: 30px;
+}
+
+.tile {
+    width: 55px;
+    height: 55px;
+    border: 2px solid var(--border);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.8rem;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+/* State Classes */
+.correct { background-color: var(--correct); color: var(--white); border-color: var(--correct); }
+.present { background-color: var(--present); color: var(--white); border-color: var(--present); }
+.absent { background-color: var(--absent); color: var(--white); border-color: var(--absent); }
+
+#keyboard {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+}
+
+.key-row {
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+}
+
+.key {
+    background-color: #e0e0e0;
+    border: none;
+    padding: 15px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 0.9rem;
+    flex: 1;
+    max-width: 40px;
+}
+
+.key:active { background-color: #bbb; }
+
+#message-container {
+    margin-top: 20px;
+    font-weight: bold;
+    height: 20px;
+}
+
+.hidden { display: none; }
+
+#restart-btn {
+    margin-top: 15px;
+    padding: 10px 20px;
+    background: #000;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+}
