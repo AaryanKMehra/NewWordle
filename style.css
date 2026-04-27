@@ -2,9 +2,9 @@
     --bg: #ffffff;
     --text: #000000;
     --border: #d3d6da;
-    --correct: #000000;
-    --present: #787c7e;
-    --absent: #3a3a3c;
+    --correct: #6aaa64; /* Green for correct position */
+    --present: #c9b458; /* Yellow for correct letter, wrong spot */
+    --absent: #787c7e;  /* Grey for wrong letter */
     --white: #ffffff;
 }
 
@@ -24,30 +24,25 @@ body {
     flex-direction: column;
     align-items: center;
     width: 100%;
-    max-width: 400px;
+    max-width: 450px;
 }
 
 header {
     text-align: center;
-    margin-bottom: 20px;
+    margin-bottom: 15px;
 }
 
 h1 {
-    font-size: 2.5rem;
+    font-size: 2.2rem;
     letter-spacing: 2px;
     margin: 0;
 }
 
-.score-container {
-    font-weight: bold;
-    margin-top: 5px;
-}
-
 #board {
     display: grid;
-    grid-template-columns: repeat(5, 1fr); /* This fixes the vertical stacking */
+    grid-template-columns: repeat(5, 1fr);
     gap: 8px;
-    margin-bottom: 30px;
+    margin-bottom: 25px;
 }
 
 .tile {
@@ -60,9 +55,10 @@ h1 {
     font-size: 1.8rem;
     font-weight: bold;
     text-transform: uppercase;
+    transition: background-color 0.4s, border-color 0.4s;
 }
 
-/* State Classes */
+/* Color States */
 .correct { background-color: var(--correct); color: var(--white); border-color: var(--correct); }
 .present { background-color: var(--present); color: var(--white); border-color: var(--present); }
 .absent { background-color: var(--absent); color: var(--white); border-color: var(--absent); }
@@ -77,37 +73,44 @@ h1 {
 .key-row {
     display: flex;
     justify-content: center;
-    gap: 4px;
+    gap: 5px;
 }
 
 .key {
     background-color: #e0e0e0;
     border: none;
-    padding: 15px 10px;
+    padding: 18px 12px;
     border-radius: 4px;
     cursor: pointer;
     font-weight: bold;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     flex: 1;
-    max-width: 40px;
+    max-width: 42px;
+    transition: 0.2s;
 }
 
-.key:active { background-color: #bbb; }
+.key:hover { background-color: #ccc; }
+
+/* Keyboard color feedback */
+.key.correct { background-color: var(--correct); color: white; }
+.key.present { background-color: var(--present); color: white; }
+.key.absent { background-color: var(--absent); color: white; }
 
 #message-container {
-    margin-top: 20px;
+    margin-top: 15px;
     font-weight: bold;
-    height: 20px;
+    height: 25px;
+    letter-spacing: 1px;
 }
-
-.hidden { display: none; }
 
 #restart-btn {
     margin-top: 15px;
-    padding: 10px 20px;
+    padding: 12px 24px;
     background: #000;
     color: #fff;
     border: none;
     cursor: pointer;
     font-weight: bold;
 }
+
+.hidden { display: none; }
