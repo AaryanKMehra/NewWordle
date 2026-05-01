@@ -2,25 +2,62 @@ const board = document.getElementById('board');
 const keyboard = document.getElementById('keyboard');
 const scoreDisplay = document.getElementById('current-score');
 const message = document.getElementById('message-container');
-const restartBtn = document.getElementById('restart-btn');
+const themeToggleBtn = document.getElementById('theme-toggle');
+
+// Modal Elements
+const endModal = document.getElementById('end-modal');
+const modalTitle = document.getElementById('modal-title');
+const modalSubtitle = document.getElementById('modal-subtitle');
+const modalScore = document.getElementById('modal-score');
+const modalBtn = document.getElementById('modal-btn');
 
 let score = 0;
 let currentAttempt = 0;
 let currentTile = 0;
 let targetWord = "";
+let isAnimating = true; 
 
-// These are only the words the computer will pick for you to guess
-const targetWords = ["DRAMA", "APPLE", "BEACH", "BRAIN", "BREAD", "CHEST", "CHORD", "CLICK", "CLOCK", "CLOUD", "DANCE", "DIARY", "DRINK", "EARTH", "FLUTE", "FRUIT", "GHOST", "GRAPE", "GREEN", "HEART", "HOUSE", "JUICE", "LIGHT", "LEMON", "MELON", "MONEY", "MUSIC", "NIGHT", "OCEAN", "PARTY", "PIANO", "PILOT", "PLANE", "PHONE", "PIZZA", "PLANT", "RADIO", "RIVER", "ROBOT", "SHIRT", "SHOES", "SMILE", "SNAKE", "SPACE", "SPOON", "STORM", "TABLE", "TIGER", "TOAST", "TOUCH", "TRAIN", "TRUCK", "VOICE", "WATER", "WATCH", "WHALE", "WORLD", "WRITE", "YOUTH", "ZEBRA"];
+themeToggleBtn.addEventListener('click', () => {
+    document.body.classList.toggle('dark-mode');
+    if (document.body.classList.contains('dark-mode')) {
+        themeToggleBtn.innerText = "☀️ Light Mode";
+    } else {
+        themeToggleBtn.innerText = "🌙 Dark Mode";
+    }
+});
 
-function initGame(isFullReset = false) {
-    if (isFullReset) score = 0; 
+// Fetch words from the highly stable Datamuse API
+async function initGame(isFullReset = false) {
+    if (isFullReset) {
+        score = 0; 
+    }
     
-    targetWord = targetWords[Math.floor(Math.random() * targetWords.length)];
+    isAnimating = true; 
+    message.innerText = "LOADING NEW WORD...";
+    endModal.classList.add('hidden'); 
+    
+    try {
+        // Datamuse query: sp=????? means "spelled with exactly 5 letters", max=500 gets 500 results
+        const response = await fetch('https://api.datamuse.com/words?sp=?????&max=500');
+        if (!response.ok) throw new Error("API failed");
+        
+        const data = await response.json();
+        
+        // Pick a random word from the 500 returned
+        const randomItem = data[Math.floor(Math.random() * data.length)];
+        targetWord = randomItem.word.toUpperCase();
+        
+        console.log("Target Word (Cheat Code):", targetWord);
+    } catch (error) {
+        console.error("API Error:", error);
+        message.innerText = "NETWORK ERROR. REFRESH PAGE.";
+        return; // Halts the game completely if API fails
+    }
+
     currentAttempt = 0;
     currentTile = 0;
     scoreDisplay.innerText = score;
     message.innerText = "";
-    restartBtn.classList.add('hidden');
     
     board.innerHTML = '';
     for (let i = 0; i < 30; i++) {
@@ -31,6 +68,7 @@ function initGame(isFullReset = false) {
     }
     
     setupKeyboard(); 
+    isAnimating = false; 
 }
 
 function setupKeyboard() {
@@ -49,7 +87,7 @@ function setupKeyboard() {
             btn.textContent = key;
             btn.classList.add('key');
             btn.setAttribute('id', `key-${key}`);
-            if (key === 'ENTER' || key === 'DEL') btn.style.maxWidth = '65px';
+            if (key === 'ENTER' || key === 'DEL') btn.classList.add('wide');
             btn.onclick = () => handleInput(key);
             rowDiv.appendChild(btn);
         });
@@ -58,63 +96,138 @@ function setupKeyboard() {
 }
 
 function handleInput(key) {
-    if (!restartBtn.classList.contains('hidden')) return;
+    if (!endModal.classList.contains('hidden') || isAnimating) return;
+    
     const currentIdx = (currentAttempt * 5) + currentTile;
 
     if (key === 'DEL' && currentTile > 0) {
         currentTile--;
         document.getElementById(`tile-${(currentAttempt * 5) + currentTile}`).textContent = '';
     } else if (key === 'ENTER') {
-        if (currentTile === 5) {
-            checkWord();
-        } else {
-            message.innerText = "TOO SHORT";
-            setTimeout(() => { if(message.innerText === "TOO SHORT") message.innerText = ""; }, 2000);
-        }
+        if (currentTile === 5) checkWordWithAPI();
+        else showTempMessage("TOO SHORT");
     } else if (currentTile < 5 && key.length === 1 && key !== 'ENTER') {
         const tile = document.getElementById(`tile-${currentIdx}`);
         tile.textContent = key.toUpperCase();
+        
+        tile.classList.add('pop');
+        setTimeout(() => tile.classList.remove('pop'), 150);
+        
         currentTile++;
     }
 }
 
-function checkWord() {
+function showTempMessage(txt) {
+    message.innerText = txt;
+    setTimeout(() => { if(message.innerText === txt) message.innerText = ""; }, 2000);
+}
+
+async function checkWordWithAPI() {
     const startIdx = currentAttempt * 5;
-    let guess = "";
+    let guess = [];
     for(let i=0; i<5; i++) {
-        guess += document.getElementById(`tile-${startIdx + i}`).textContent;
+        guess.push(document.getElementById(`tile-${startIdx + i}`).textContent);
+    }
+    const guessStr = guess.join('');
+
+    isAnimating = true; 
+    message.innerText = "CHECKING...";
+
+    try {
+        const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${guessStr}`);
+        
+        if (!response.ok) {
+            showTempMessage("NOT IN WORD LIST");
+            isAnimating = false; 
+            return;
+        }
+        
+        message.innerText = "";
+        processColors(guess, guessStr, startIdx);
+
+    } catch (error) {
+        showTempMessage("CONNECTION ERROR");
+        isAnimating = false;
+    }
+}
+
+function processColors(guess, guessStr, startIdx) {
+    const targetArr = targetWord.split('');
+    const result = new Array(5).fill('absent');
+    const letterCount = {};
+
+    for (let letter of targetArr) {
+        letterCount[letter] = (letterCount[letter] || 0) + 1;
     }
 
-    // DICTIONARY CHECK REMOVED: Every 5-letter combination is now accepted
-
     for (let i = 0; i < 5; i++) {
-        const tile = document.getElementById(`tile-${startIdx + i}`);
-        const letter = guess[i];
-        const keyBtn = document.getElementById(`key-${letter}`);
-        
-        if (letter === targetWord[i]) {
-            tile.classList.add('correct');
-            keyBtn.classList.add('correct');
-        } else if (targetWord.includes(letter)) {
-            tile.classList.add('present');
-            if (!keyBtn.classList.contains('correct')) keyBtn.classList.add('present');
-        } else {
-            tile.classList.add('absent');
-            keyBtn.classList.add('absent');
+        if (guess[i] === targetArr[i]) {
+            result[i] = 'correct';
+            letterCount[guess[i]]--; 
         }
     }
 
-    if (guess === targetWord) {
-        score++;
-        message.innerText = "SUCCESS!";
-        setTimeout(() => initGame(false), 1500); 
-    } else if (currentAttempt === 5) {
-        message.innerText = `WORD: ${targetWord}`;
-        restartBtn.classList.remove('hidden'); 
-    } else {
-        currentAttempt++;
-        currentTile = 0;
+    for (let i = 0; i < 5; i++) {
+        if (result[i] !== 'correct') {
+            if (targetArr.includes(guess[i]) && letterCount[guess[i]] > 0) {
+                result[i] = 'present';
+                letterCount[guess[i]]--; 
+            }
+        }
     }
+
+    for (let i = 0; i < 5; i++) {
+        setTimeout(() => {
+            const tile = document.getElementById(`tile-${startIdx + i}`);
+            const keyBtn = document.getElementById(`key-${guess[i]}`);
+            
+            tile.classList.add('flip');
+            setTimeout(() => {
+                tile.classList.remove('flip');
+                tile.classList.add(result[i]);
+            }, 150);
+            
+            if (!keyBtn.classList.contains('correct')) {
+                if (result[i] === 'correct' || !keyBtn.classList.contains('present')) {
+                    keyBtn.classList.add(result[i]);
+                }
+            }
+        }, i * 200); 
+    }
+
+    // Modal Trigger Logic
+    setTimeout(() => {
+        if (guessStr === targetWord) {
+            score++; 
+            scoreDisplay.innerText = score; 
+            
+            modalTitle.innerText = "EXCELLENT!";
+            modalTitle.style.color = "var(--correct)";
+            modalSubtitle.innerText = `You found the word in ${currentAttempt + 1} guesses.`;
+            modalScore.innerText = score;
+            modalBtn.innerText = "NEXT WORD";
+            modalBtn.onclick = () => initGame(false); 
+            
+            endModal.classList.remove('hidden');
+            isAnimating = false; 
+            
+        } else if (currentAttempt === 5) {
+            modalTitle.innerText = "GAME OVER";
+            modalTitle.style.color = "var(--text-color)";
+            modalSubtitle.innerText = `The word was ${targetWord}`;
+            modalScore.innerText = score;
+            modalBtn.innerText = "TRY AGAIN";
+            modalBtn.onclick = () => initGame(true); 
+            
+            endModal.classList.remove('hidden');
+            isAnimating = false; 
+            
+        } else {
+            currentAttempt++;
+            currentTile = 0;
+            isAnimating = false; 
+        }
+    }, 5 * 200 + 400); 
 }
 
 window.addEventListener('keydown', (e) => {

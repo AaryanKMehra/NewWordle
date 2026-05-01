@@ -1,22 +1,41 @@
-:root {
-    --bg: #ffffff;
-    --text: #000000;
-    --border: #d3d6da;
-    --correct: #6aaa64; /* Green for correct position */
-    --present: #c9b458; /* Yellow for correct letter, wrong spot */
-    --absent: #787c7e;  /* Grey for wrong letter */
-    --white: #ffffff;
+/* --- THEME VARIABLES --- */
+.light-mode {
+    --bg-color: #ffffff;
+    --text-color: #111111;
+    --border-color: #d3d6da;
+    --key-bg: #d3d6da;
+    --key-text: #111111;
+    --key-hover: #bbbbbb;
+    --correct: #6aaa64; 
+    --present: #c9b458; 
+    --absent: #787c7e;  
+    --tile-text-locked: #ffffff;
 }
 
+.dark-mode {
+    --bg-color: #121213;
+    --text-color: #ffffff;
+    --border-color: #3a3a3c;
+    --key-bg: #818384;
+    --key-text: #ffffff;
+    --key-hover: #565758;
+    --correct: #538d4e; /* Deeper green for dark mode */
+    --present: #b59f3b; /* Deeper yellow for dark mode */
+    --absent: #3a3a3c;  
+    --tile-text-locked: #ffffff;
+}
+
+/* --- BASE STYLES --- */
 body {
-    background-color: var(--bg);
-    color: var(--text);
+    background-color: var(--bg-color);
+    color: var(--text-color);
     font-family: 'Helvetica Neue', Arial, sans-serif;
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
     margin: 0;
+    transition: background-color 0.3s ease, color 0.3s ease; /* Smooth theme transition */
 }
 
 #game-container {
@@ -24,93 +43,217 @@ body {
     flex-direction: column;
     align-items: center;
     width: 100%;
-    max-width: 450px;
+    max-width: 500px;
+    position: relative; /* Critical: keeps the modal locked inside the game area */
 }
 
+/* --- HEADER & TOGGLE --- */
 header {
-    text-align: center;
-    margin-bottom: 15px;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.header-top {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    width: 100%;
 }
 
 h1 {
-    font-size: 2.2rem;
+    font-size: 2.5rem;
     letter-spacing: 2px;
     margin: 0;
 }
 
+#theme-toggle {
+    position: absolute;
+    right: 10px;
+    background: none;
+    border: 2px solid var(--border-color);
+    color: var(--text-color);
+    padding: 6px 12px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 0.8rem;
+    transition: 0.3s;
+}
+
+#theme-toggle:hover {
+    border-color: var(--text-color);
+}
+
+.score-container {
+    text-align: center;
+    font-weight: bold;
+    font-size: 1.1rem;
+    margin-top: 5px;
+}
+
+/* --- GAME BOARD --- */
 #board {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
     gap: 8px;
-    margin-bottom: 25px;
+    margin-bottom: 30px;
 }
 
 .tile {
-    width: 55px;
-    height: 55px;
-    border: 2px solid var(--border);
+    width: 60px;
+    height: 60px;
+    border: 2px solid var(--border-color);
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 1.8rem;
+    font-size: 2rem;
     font-weight: bold;
     text-transform: uppercase;
-    transition: background-color 0.4s, border-color 0.4s;
+    transition: transform 0.15s ease-in-out, background-color 0.4s ease, border-color 0.4s ease;
 }
 
-/* Color States */
-.correct { background-color: var(--correct); color: var(--white); border-color: var(--correct); }
-.present { background-color: var(--present); color: var(--white); border-color: var(--present); }
-.absent { background-color: var(--absent); color: var(--white); border-color: var(--absent); }
+/* Animations */
+.pop { 
+    transform: scale(1.1); 
+    border-color: var(--text-color); 
+}
 
+.flip {
+    transform: rotateX(90deg);
+}
+
+/* State Colors (Overriding defaults when a letter is locked in) */
+.correct { background-color: var(--correct) !important; color: var(--tile-text-locked) !important; border-color: var(--correct) !important; }
+.present { background-color: var(--present) !important; color: var(--tile-text-locked) !important; border-color: var(--present) !important; }
+.absent { background-color: var(--absent) !important; color: var(--tile-text-locked) !important; border-color: var(--absent) !important; }
+
+/* --- KEYBOARD --- */
 #keyboard {
     display: flex;
     flex-direction: column;
     gap: 8px;
     width: 100%;
+    padding: 0 10px;
 }
 
 .key-row {
     display: flex;
     justify-content: center;
-    gap: 5px;
+    gap: 6px;
 }
 
 .key {
-    background-color: #e0e0e0;
+    background-color: var(--key-bg);
+    color: var(--key-text);
     border: none;
-    padding: 18px 12px;
+    padding: 18px 0;
     border-radius: 4px;
     cursor: pointer;
     font-weight: bold;
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     flex: 1;
-    max-width: 42px;
-    transition: 0.2s;
+    max-width: 45px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: background-color 0.2s;
 }
 
-.key:hover { background-color: #ccc; }
+.key.wide {
+    max-width: 70px;
+    font-size: 0.8rem;
+}
 
-/* Keyboard color feedback */
-.key.correct { background-color: var(--correct); color: white; }
-.key.present { background-color: var(--present); color: white; }
-.key.absent { background-color: var(--absent); color: white; }
+.key:hover { background-color: var(--key-hover); }
 
+/* Keyboard State Colors */
+.key.correct { background-color: var(--correct) !important; color: var(--tile-text-locked) !important; }
+.key.present { background-color: var(--present) !important; color: var(--tile-text-locked) !important; }
+.key.absent { background-color: var(--absent) !important; color: var(--tile-text-locked) !important; }
+
+/* --- UI ELEMENTS --- */
 #message-container {
-    margin-top: 15px;
+    margin-top: 20px;
     font-weight: bold;
     height: 25px;
     letter-spacing: 1px;
+    text-align: center;
 }
 
-#restart-btn {
-    margin-top: 15px;
+/* --- MODAL POPUP STYLES --- */
+#end-modal {
+    position: absolute;
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent overlay */
+    backdrop-filter: blur(4px); /* Frosted glass effect */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background-color: var(--bg-color);
+    padding: 30px 40px;
+    border-radius: 12px;
+    border: 2px solid var(--border-color);
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    /* Initial state for the popUp animation */
+    transform: scale(0.8);
+    opacity: 0;
+    animation: popUp 0.4s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+}
+
+@keyframes popUp {
+    to { 
+        transform: scale(1); 
+        opacity: 1; 
+    }
+}
+
+#modal-title {
+    margin: 0 0 10px 0;
+    font-size: 2rem;
+    letter-spacing: 1px;
+}
+
+#modal-subtitle {
+    margin: 0 0 20px 0;
+    font-size: 1.1rem;
+    color: var(--text-color);
+    opacity: 0.8;
+}
+
+.modal-score-box {
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-bottom: 25px;
+    padding: 10px;
+    background-color: var(--key-bg);
+    border-radius: 6px;
+}
+
+#modal-btn {
     padding: 12px 24px;
-    background: #000;
-    color: #fff;
+    background: var(--text-color);
+    color: var(--bg-color);
     border: none;
     cursor: pointer;
     font-weight: bold;
+    border-radius: 6px;
+    font-size: 1rem;
+    transition: 0.2s;
+    width: 100%;
 }
 
-.hidden { display: none; }
+#modal-btn:hover {
+    opacity: 0.8;
+}
+
+/* Hide helper class */
+.hidden { display: none !important; }

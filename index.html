@@ -3,25 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minimal Wordle | Infinite Mode</title>
+    <title>Wordle Pro | API Edition</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="light-mode"> 
+    
     <div id="game-container">
         <header>
-            <h1>WORDLE</h1>
-            <div class="score-container">SCORE: <span id="current-score">0</span></div>
+            <div class="header-top">
+                <h1>WORDLE</h1>
+                <button id="theme-toggle" aria-label="Toggle Dark Mode">🌙 Dark Mode</button>
+            </div>
+            <div class="score-container">STREAK: <span id="current-score">0</span></div>
         </header>
 
-        <div id="board">
-            </div>
-
-        <div id="keyboard">
-            </div>
-
+        <div id="board"></div>
+        <div id="keyboard"></div>
         <div id="message-container"></div>
-        <button id="restart-btn" class="hidden" onclick="initGame(true)">TRY AGAIN</button>
+
+        <div id="end-modal" class="hidden">
+            <div class="modal-content">
+                <h2 id="modal-title">SUCCESS!</h2>
+                <p id="modal-subtitle">Word: XXXXX</p>
+                <div class="modal-score-box">STREAK: <span id="modal-score">0</span></div>
+                <button id="modal-btn">NEXT WORD</button>
+            </div>
+        </div>
     </div>
+    
     <script src="script.js"></script>
 </body>
 </html>
